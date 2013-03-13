@@ -69,7 +69,7 @@ while True:
         nextuser=None
         minimumscore=1000
         unknowns = [person for person in pending if person not in userobject]
-        for i in xrange(0,int(math.ceil(len(unknowns)/100))):
+        for i in xrange(0,int(math.ceil(len(unknowns)/100.0))):
             piece = unknowns[i*100:(i+1)*100]
             getinfo(piece)
         for user in pending.copy():
