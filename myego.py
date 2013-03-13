@@ -77,7 +77,8 @@ while True:
             if(userscore < minimumscore):
                 minimumscore = userscore
                 nextuser=user
-        explore_user(t,pending.pop())
+        explore_user(t,nextuser)
+        pending.remove(nextuser)
         time.sleep(5)
     except TwitterHTTPError as ex:
         print "Exception %s - %s" % (ex,type(ex))
