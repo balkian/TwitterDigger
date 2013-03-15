@@ -63,6 +63,13 @@ def explore_user(t,uid):
             pending.add(follo)
         distance[follo] = newdist
 
+
+def signal_handler(signal, frame):
+        print 'You pressed Ctrl+C!'
+        sh.close()
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+
 while True:
     try:
         print "Iteration!"
@@ -79,6 +86,7 @@ while True:
                 nextuser=user
         explore_user(t,nextuser)
         pending.remove(nextuser)
+        sh.sync()
         time.sleep(5)
     except TwitterHTTPError as ex:
         print "Exception %s - %s" % (ex,type(ex))
@@ -88,4 +96,8 @@ while True:
     except IncompleteRead:
         print "IncompleteRead!"
         time.sleep(5)
+    except Exception as ex:
+        print "Exception"
+        sh.close()
+        raise ex
 
