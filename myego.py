@@ -15,10 +15,13 @@ for key in keys:
     if key not in sh:
         sh[key]={}
 
+if 'pending' not in sh:
+    sh['pending']=set()
+
 followers = sh['followers']
 names = sh['names']
 distance = sh['distance']
-pending = set()
+pending = sh['pending']
 userobject = sh['userobject']
 
 t = Twitter(auth=OAuth(credentials.ACCESS_TOKEN,
