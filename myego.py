@@ -52,6 +52,7 @@ class Fetcher(threading.Thread):
                 print "Exception"
                 raise ex
             finally:
+                sh.sync()
                 lock.release()
                 if timetowait:
                     time.sleep(timetowait)
