@@ -5,23 +5,32 @@ import shelve
 import math
 import signal
 import sys
+import argparse
 from twitter import Twitter, OAuth, TwitterHTTPError
 from httplib import IncompleteRead
 
-sh = shelve.open('twits_shelf.db',writeback=True)
-keys=['followers','names','distance','userobject']
+parser = argparse.ArgumentParser(description='Get an ego network for a given ID.')
+
+parser.add_argument('NAME', nargs='?', metavar='id',
+        default='me', type=str, help='Name of the user to be used as a center')
+
+parser.add_argument('--new','-n',action='store_true', help='Start a new search.')
+
+args = parser.parse_args()
+
+print args.new
+print args.NAME
+
+sh = shelve.open('twits_shelf-%s.db' % args.NAME,writeback=True)
+keys=['followers','distance','userobject']
 
 for key in keys:
-    if key not in sh:
+    if key not in sh or args.new:
         sh[key]={}
 
-if 'pending' not in sh:
-    sh['pending']=set()
-
 followers = sh['followers']
-names = sh['names']
 distance = sh['distance']
-pending = sh['pending']
+pending = set()
 userobject = sh['userobject']
 
 t = Twitter(auth=OAuth(credentials.ACCESS_TOKEN,
@@ -29,11 +38,26 @@ t = Twitter(auth=OAuth(credentials.ACCESS_TOKEN,
     credentials.CONSUMER_KEY,
     credentials.CONSUMER_SECRET))
 
-creds = t.account.verify_credentials()
-myid = creds['id']
-names[myid] = creds['screen_name']
-distance[myid] = 0
-pending.add(myid)
+if not args.new:
+    print 'Recovering state.'
+    for key in followers:
+        for follower in followers[key]:
+            if follower not in followers:
+                pending.add(follower)
+
+if args.new or len(pending)<1:
+    if args.NAME != 'me':
+        user = t.users.lookup(screen_name=args.NAME)[0]
+        uid = user['id']
+        distance[uid] = 0
+        pending.add(uid)
+    else:
+        creds = t.account.verify_credentials()
+        myid = creds['id']
+        distance[myid]=0
+        pending.add(myid)
+
+print 'Pending is now: %s' %pending
 
 def getinfo(piece):
     piecestr = ",".join(map(str,piece)) if type(piece) != str and len(piece)>1 else piece[0]
@@ -65,7 +89,6 @@ def explore_user(t,uid):
         if follo not in followers.keys():
             pending.add(follo)
         distance[follo] = newdist
-
 
 def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
